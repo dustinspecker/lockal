@@ -1,0 +1,32 @@
+---
+name: CI
+on: [pull_request, push]
+jobs:
+  build_and_test:
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+      - run: |
+          set -ex
+
+          go mod tidy
+          if [ "$(git diff --name-only | wc --lines)" -ne 0 ]; then
+            echo "run `go mod tidy` and commit" >&2
+            exit 1
+          fi
+
+          make fmt
+          if [ "$(git diff --name-only | wc --lines)" -ne 0 ]; then
+            echo "run `make fmt` and commit" >&2
+            exit 1
+          fi
+
+          make test-unit
+
+          make build
+
+          make test-integration
+        shell: bash
+...
+
+
