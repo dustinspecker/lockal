@@ -42,6 +42,34 @@ func TestDownload(t *testing.T) {
 	}
 }
 
+func TestDownloadSkipsGettingFileIfAlreadyExists(t *testing.T) {
+	fs := afero.NewMemMapFs()
+
+	if err := fs.Mkdir("bin", 0755); err != nil {
+		t.Fatalf("unexpected error creating bin directory: %v", err)
+	}
+
+	if err := afero.WriteFile(fs, "bin/dustin", []byte("file dustin"), 0644); err != nil {
+		t.Fatalf("unexpected error creating bin/dustin: %v", err)
+	}
+
+	getFile := func(dest, src string) error {
+		t.Error("getFile should not have been called")
+
+		return fmt.Errorf("should not be called")
+	}
+
+	dep := Dependency{
+		Name:     "dustin",
+		Location: "dustin.com/dustin",
+	}
+
+	err := dep.Download(fs, getFile)
+	if err != nil {
+		t.Fatalf("expected no error, but got %v", err)
+	}
+}
+
 func TestDownloadReturnsErrorWhenGetFileErrs(t *testing.T) {
 	getFile := func(dest, src string) error {
 		return fmt.Errorf("some error")

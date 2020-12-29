@@ -59,6 +59,14 @@ We'll see lockal log something similar to:
 
 Lockal will have created the bash script at `./bin/get_helm.sh` (relative to where `lockal.star` exists.
 
+If we execute `lockal install` again, we'll see the following logs:
+
+```
+2020/12/29 08:37:32 skipping download for get_helm.sh as it already exists at bin/get_helm.sh
+```
+
+Lockal only downloads what doesn't exist.
+
 ## Commands
 
 ### `lockal install`
