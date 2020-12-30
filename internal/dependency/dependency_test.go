@@ -2,6 +2,7 @@ package dependency
 
 import (
 	"fmt"
+	"os"
 	"reflect"
 	"testing"
 
@@ -29,6 +30,7 @@ func TestDownload(t *testing.T) {
 	dep := Dependency{
 		Name:     "ghostdog",
 		Location: "some.sh/ghosthouse",
+		Checksum: "a705aaf587ddc9ed135d4c318c339f3a0d6eb3a2e11936942afbfcd65254da6a1600b7b8e27f59464219fdc704f3b96c9953d80c05632411f475eea6f4548963",
 	}
 
 	err := dep.Download(fs, logCtx, getFile)
@@ -50,7 +52,7 @@ func TestDownload(t *testing.T) {
 	}
 }
 
-func TestDownloadSkipsGettingFileIfAlreadyExists(t *testing.T) {
+func TestDownloadSkipsGettingFileIfAlreadyExistsWithSameChecksum(t *testing.T) {
 	fs := afero.NewMemMapFs()
 	logHandler, logCtx := getLogCtx()
 
@@ -71,6 +73,7 @@ func TestDownloadSkipsGettingFileIfAlreadyExists(t *testing.T) {
 	dep := Dependency{
 		Name:     "dustin",
 		Location: "dustin.com/dustin",
+		Checksum: "c301106040f367ce621cbafa373d73fe270a95aeb2a6076f15a6bf79c1634d39e67e62d3a660e410a865d1ec7e1c2a131270090083885656d1f941bdf8abefeb",
 	}
 
 	err := dep.Download(fs, logCtx, getFile)
@@ -80,6 +83,83 @@ func TestDownloadSkipsGettingFileIfAlreadyExists(t *testing.T) {
 
 	if !hasLogEntry(logHandler, log.InfoLevel, log.Fields{"app": "lockal-test"}, "skipping download for dustin as it already exists at bin/dustin") {
 		t.Error("expected a log message saying skipping download")
+	}
+}
+
+func TestDownloadUpdatesExecutableIfChecksumMismatch(t *testing.T) {
+	fs := afero.NewMemMapFs()
+	logHandler, logCtx := getLogCtx()
+
+	if err := fs.Mkdir("bin", 0755); err != nil {
+		t.Fatalf("unexpected error creating bin directory: %v", err)
+	}
+
+	if err := afero.WriteFile(fs, "bin/dustin", []byte("old file dustin"), 0644); err != nil {
+		t.Fatalf("unexpected error creating bin/dustin: %v", err)
+	}
+
+	getFile := func(dest, src string) error {
+		return afero.WriteFile(fs, dest, []byte("file dustin"), 0644)
+	}
+
+	dep := Dependency{
+		Name:     "dustin",
+		Location: "dustin.com/dustin",
+		Checksum: "c301106040f367ce621cbafa373d73fe270a95aeb2a6076f15a6bf79c1634d39e67e62d3a660e410a865d1ec7e1c2a131270090083885656d1f941bdf8abefeb",
+	}
+
+	err := dep.Download(fs, logCtx, getFile)
+	if err != nil {
+		t.Fatalf("expected no error, but got %v", err)
+	}
+
+	if !hasLogEntry(logHandler, log.InfoLevel, log.Fields{"app": "lockal-test"}, "removed old bin/dustin since it didn't match expected checksum") {
+		t.Error("expected a log message saying updating old executable")
+	}
+}
+
+func TestDownloadReturnsErrorIfChecksumDoesNotMatchAfterDownload(t *testing.T) {
+	fs := afero.NewMemMapFs()
+	logHandler, logCtx := getLogCtx()
+
+	if err := fs.Mkdir("bin", 0755); err != nil {
+		t.Fatalf("unexpected error creating bin directory: %v", err)
+	}
+
+	getFile := func(dest, src string) error {
+		return afero.WriteFile(fs, dest, []byte("file a"), 0644)
+	}
+
+	dep := Dependency{
+		Name:     "ghostdog",
+		Location: "some.sh/ghosthouse",
+		Checksum: "hey",
+	}
+
+	err := dep.Download(fs, logCtx, getFile)
+	if err == nil {
+		t.Fatal("expected an error when checksums do not match")
+	}
+
+	expectedErrorMessage := "downloaded bin/ghostdog did not match expected checksum"
+
+	if err.Error() != expectedErrorMessage {
+		t.Errorf("expected error message of \"%s\", but got \"%s\"", expectedErrorMessage, err.Error())
+	}
+
+	if !hasLogEntry(logHandler, log.ErrorLevel, log.Fields{"app": "lockal-test"}, expectedErrorMessage) {
+		t.Error("expected a log message saying checksums did not match after download")
+	}
+	if !hasLogEntry(logHandler, log.InfoLevel, log.Fields{"app": "lockal-test"}, "removing bin/ghostdog since it has a checksum of a705aaf587ddc9ed135d4c318c339f3a0d6eb3a2e11936942afbfcd65254da6a1600b7b8e27f59464219fdc704f3b96c9953d80c05632411f475eea6f4548963, which does not match expected checksum of hey") {
+		t.Error("expected a log message saying checksums did not match after download")
+	}
+
+	_, err = fs.Stat("bin/ghostdog")
+	if err == nil {
+		t.Fatal("expected an error stating bin/ghostdog not found")
+	}
+	if !os.IsNotExist(err) {
+		t.Fatalf("expected error to be IsNotExist, but got %v", err)
 	}
 }
 

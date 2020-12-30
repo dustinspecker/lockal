@@ -14,6 +14,7 @@ func TestExecutable(t *testing.T) {
 	args := []starlark.Value{
 		starlark.String("some_name"),
 		starlark.String("some_location"),
+		starlark.String("some_checksum"),
 	}
 	kwargs := []starlark.Tuple{}
 
@@ -28,6 +29,10 @@ func TestExecutable(t *testing.T) {
 
 		if dep.Location != "some_location" {
 			t.Errorf("expected dep.Location to be some_location, but was %s", dep.Location)
+		}
+
+		if dep.Checksum != "some_checksum" {
+			t.Errorf("expected dep.Checksum to be some_checksum, but was %s", dep.Checksum)
 		}
 
 		return nil
