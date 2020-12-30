@@ -1,9 +1,10 @@
 package main
 
 import (
-	"log"
 	"os"
 
+	"github.com/apex/log"
+	cliHandler "github.com/apex/log/handlers/cli"
 	gogetter "github.com/hashicorp/go-getter"
 	"github.com/spf13/afero"
 	"github.com/urfave/cli/v2"
@@ -12,6 +13,13 @@ import (
 )
 
 func main() {
+	log.SetLevel(log.InfoLevel)
+	log.SetHandler(cliHandler.New(os.Stderr))
+
+	logCtx := log.WithFields(log.Fields{
+		"app": "lockal",
+	})
+
 	app := &cli.App{
 		Name:  "lockal",
 		Usage: "manage binary dependencies",
@@ -29,7 +37,7 @@ func main() {
 						return gogetter.GetFile(dest, src)
 					}
 					for _, dep := range deps {
-						if err = dep.Download(afero.NewOsFs(), getFile); err != nil {
+						if err = dep.Download(afero.NewOsFs(), logCtx, getFile); err != nil {
 							return err
 						}
 					}
@@ -41,6 +49,6 @@ func main() {
 	}
 
 	if err := app.Run(os.Args); err != nil {
-		log.Fatal(err)
+		logCtx.Fatal(err.Error())
 	}
 }

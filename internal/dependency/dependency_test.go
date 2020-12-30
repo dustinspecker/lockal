@@ -2,13 +2,17 @@ package dependency
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 
+	"github.com/apex/log"
+	"github.com/apex/log/handlers/memory"
 	"github.com/spf13/afero"
 )
 
 func TestDownload(t *testing.T) {
 	fs := afero.NewMemMapFs()
+	logHandler, logCtx := getLogCtx()
 
 	if err := fs.Mkdir("bin", 0755); err != nil {
 		t.Fatalf("unexpected error creating bin directory: %v", err)
@@ -27,9 +31,13 @@ func TestDownload(t *testing.T) {
 		Location: "some.sh/ghosthouse",
 	}
 
-	err := dep.Download(fs, getFile)
+	err := dep.Download(fs, logCtx, getFile)
 	if err != nil {
 		t.Fatalf("expected no error, but got %v", err)
+	}
+
+	if !hasLogEntry(logHandler, log.InfoLevel, log.Fields{"app": "lockal-test"}, "downloading ghostdog from some.sh/ghosthouse to bin/ghostdog") {
+		t.Error("expected a log message saying download in progress")
 	}
 
 	stat, err := fs.Stat("bin/ghostdog")
@@ -44,6 +52,7 @@ func TestDownload(t *testing.T) {
 
 func TestDownloadSkipsGettingFileIfAlreadyExists(t *testing.T) {
 	fs := afero.NewMemMapFs()
+	logHandler, logCtx := getLogCtx()
 
 	if err := fs.Mkdir("bin", 0755); err != nil {
 		t.Fatalf("unexpected error creating bin directory: %v", err)
@@ -64,13 +73,19 @@ func TestDownloadSkipsGettingFileIfAlreadyExists(t *testing.T) {
 		Location: "dustin.com/dustin",
 	}
 
-	err := dep.Download(fs, getFile)
+	err := dep.Download(fs, logCtx, getFile)
 	if err != nil {
 		t.Fatalf("expected no error, but got %v", err)
+	}
+
+	if !hasLogEntry(logHandler, log.InfoLevel, log.Fields{"app": "lockal-test"}, "skipping download for dustin as it already exists at bin/dustin") {
+		t.Error("expected a log message saying skipping download")
 	}
 }
 
 func TestDownloadReturnsErrorWhenGetFileErrs(t *testing.T) {
+	_, logCtx := getLogCtx()
+
 	getFile := func(dest, src string) error {
 		return fmt.Errorf("some error")
 	}
@@ -80,7 +95,7 @@ func TestDownloadReturnsErrorWhenGetFileErrs(t *testing.T) {
 		Location: "some.sh/lockal",
 	}
 
-	err := dep.Download(afero.NewMemMapFs(), getFile)
+	err := dep.Download(afero.NewMemMapFs(), logCtx, getFile)
 	if err == nil {
 		t.Fatalf("expected error to be returned when getFile errs")
 	}
@@ -88,4 +103,26 @@ func TestDownloadReturnsErrorWhenGetFileErrs(t *testing.T) {
 	if err.Error() != "some error" {
 		t.Errorf("expected error message of \"some error\" to be returned, but got \"%s\"", err.Error())
 	}
+}
+
+func getLogCtx() (*memory.Handler, *log.Entry) {
+	log.SetLevel(log.DebugLevel)
+	logHandler := memory.New()
+	log.SetHandler(logHandler)
+
+	logCtx := log.WithFields(log.Fields{
+		"app": "lockal-test",
+	})
+
+	return logHandler, logCtx
+}
+
+func hasLogEntry(handler *memory.Handler, logLevel log.Level, fields log.Fields, message string) bool {
+	for _, entry := range handler.Entries {
+		if entry.Level == logLevel && entry.Message == message && reflect.DeepEqual(entry.Fields, fields) {
+			return true
+		}
+	}
+
+	return false
 }
