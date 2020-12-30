@@ -17,7 +17,9 @@ Once this is all scripted, then the scenario of how to handle a developer having
 is cumbersome and typically results in attempting to parse the output of some version command to determine if the executable is the expected
 version. Then we have to handle removing stale executables and downloading the correct one.
 
-Lockal automates this process.
+Also, sometimes downloading is slow, so it would be great if Lockal could access a cache of previous executables it has downloaded.
+
+Lockal helps automate this process.
 
 ## Install lockal
 

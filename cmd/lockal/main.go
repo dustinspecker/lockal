@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"path/filepath"
 
 	"github.com/apex/log"
 	cliHandler "github.com/apex/log/handlers/cli"
@@ -20,6 +21,11 @@ func main() {
 		"app": "lockal",
 	})
 
+	userHomeDir, err := os.UserHomeDir()
+	if err != nil {
+		logCtx.WithError(err).Fatal("getting home directory")
+	}
+
 	app := &cli.App{
 		Name:  "lockal",
 		Usage: "manage binary dependencies",
@@ -27,6 +33,14 @@ func main() {
 			{
 				Name:  "install",
 				Usage: "install dependencies from lockal.star",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "cache-directory",
+						Usage:   "where to save cached downloads",
+						Value:   filepath.Join(userHomeDir, ".cache"),
+						EnvVars: []string{"XDG_CACHE_DIR"},
+					},
+				},
 				Action: func(c *cli.Context) error {
 					deps, err := parse.GetDependencies(afero.NewOsFs())
 					if err != nil {
@@ -37,7 +51,7 @@ func main() {
 						return gogetter.GetFile(dest, src)
 					}
 					for _, dep := range deps {
-						if err = dep.Download(afero.NewOsFs(), logCtx, getFile); err != nil {
+						if err = dep.Download(afero.NewOsFs(), logCtx, c.String("cache-directory"), getFile); err != nil {
 							return err
 						}
 					}

@@ -12,6 +12,7 @@ import (
 )
 
 func TestDownload(t *testing.T) {
+	// validate download without cache works
 	fs := afero.NewMemMapFs()
 	logHandler, logCtx := getLogCtx()
 
@@ -33,16 +34,43 @@ func TestDownload(t *testing.T) {
 		Checksum: "a705aaf587ddc9ed135d4c318c339f3a0d6eb3a2e11936942afbfcd65254da6a1600b7b8e27f59464219fdc704f3b96c9953d80c05632411f475eea6f4548963",
 	}
 
-	err := dep.Download(fs, logCtx, getFile)
+	err := dep.Download(fs, logCtx, "/.cache", getFile)
 	if err != nil {
 		t.Fatalf("expected no error, but got %v", err)
 	}
 
-	if !hasLogEntry(logHandler, log.InfoLevel, log.Fields{"app": "lockal-test"}, "downloading ghostdog from some.sh/ghosthouse to bin/ghostdog") {
+	if !hasLogEntry(logHandler, log.InfoLevel, log.Fields{"app": "lockal-test"}, "downloading ghostdog from some.sh/ghosthouse to /.cache/lockal/sha512/a7/a705aaf587ddc9ed135d4c318c339f3a0d6eb3a2e11936942afbfcd65254da6a1600b7b8e27f59464219fdc704f3b96c9953d80c05632411f475eea6f4548963") {
 		t.Error("expected a log message saying download in progress")
 	}
 
 	stat, err := fs.Stat("bin/ghostdog")
+	if err != nil {
+		t.Fatalf("unexpected error stating bin/ghostdog: %v", err)
+	}
+
+	if stat.Mode() != 0755 {
+		t.Errorf("expected file to be marked 0755, but was %v", stat.Mode())
+	}
+
+	// validate cache is used when possible
+	if err = fs.Remove("bin/ghostdog"); err != nil {
+		t.Fatalf("unexpected error while removing bin/ghostdog: %v", err)
+	}
+
+	getFileNoDownload := func(dest, src string) error {
+		return fmt.Errorf("getFileNoDownload should not have been called - cache should have been used")
+	}
+
+	err = dep.Download(fs, logCtx, "/.cache", getFileNoDownload)
+	if err != nil {
+		t.Fatalf("expected no error, but got %v", err)
+	}
+
+	if !hasLogEntry(logHandler, log.InfoLevel, log.Fields{"app": "lockal-test"}, "copying from /.cache/lockal/sha512/a7/a705aaf587ddc9ed135d4c318c339f3a0d6eb3a2e11936942afbfcd65254da6a1600b7b8e27f59464219fdc704f3b96c9953d80c05632411f475eea6f4548963 to bin/ghostdog") {
+		t.Error("expected a log message saying download in progress")
+	}
+
+	stat, err = fs.Stat("bin/ghostdog")
 	if err != nil {
 		t.Fatalf("unexpected error stating bin/ghostdog: %v", err)
 	}
@@ -76,7 +104,7 @@ func TestDownloadSkipsGettingFileIfAlreadyExistsWithSameChecksum(t *testing.T) {
 		Checksum: "c301106040f367ce621cbafa373d73fe270a95aeb2a6076f15a6bf79c1634d39e67e62d3a660e410a865d1ec7e1c2a131270090083885656d1f941bdf8abefeb",
 	}
 
-	err := dep.Download(fs, logCtx, getFile)
+	err := dep.Download(fs, logCtx, "/home/dustin/.cache", getFile)
 	if err != nil {
 		t.Fatalf("expected no error, but got %v", err)
 	}
@@ -108,7 +136,7 @@ func TestDownloadUpdatesExecutableIfChecksumMismatch(t *testing.T) {
 		Checksum: "c301106040f367ce621cbafa373d73fe270a95aeb2a6076f15a6bf79c1634d39e67e62d3a660e410a865d1ec7e1c2a131270090083885656d1f941bdf8abefeb",
 	}
 
-	err := dep.Download(fs, logCtx, getFile)
+	err := dep.Download(fs, logCtx, "/tmp/.cache", getFile)
 	if err != nil {
 		t.Fatalf("expected no error, but got %v", err)
 	}
@@ -136,12 +164,12 @@ func TestDownloadReturnsErrorIfChecksumDoesNotMatchAfterDownload(t *testing.T) {
 		Checksum: "hey",
 	}
 
-	err := dep.Download(fs, logCtx, getFile)
+	err := dep.Download(fs, logCtx, "/var/lib/lockal/.cache", getFile)
 	if err == nil {
 		t.Fatal("expected an error when checksums do not match")
 	}
 
-	expectedErrorMessage := "downloaded bin/ghostdog did not match expected checksum"
+	expectedErrorMessage := "downloaded /var/lib/lockal/.cache/lockal/sha512/he/hey did not match expected checksum"
 
 	if err.Error() != expectedErrorMessage {
 		t.Errorf("expected error message of \"%s\", but got \"%s\"", expectedErrorMessage, err.Error())
@@ -150,7 +178,7 @@ func TestDownloadReturnsErrorIfChecksumDoesNotMatchAfterDownload(t *testing.T) {
 	if !hasLogEntry(logHandler, log.ErrorLevel, log.Fields{"app": "lockal-test"}, expectedErrorMessage) {
 		t.Error("expected a log message saying checksums did not match after download")
 	}
-	if !hasLogEntry(logHandler, log.InfoLevel, log.Fields{"app": "lockal-test"}, "removing bin/ghostdog since it has a checksum of a705aaf587ddc9ed135d4c318c339f3a0d6eb3a2e11936942afbfcd65254da6a1600b7b8e27f59464219fdc704f3b96c9953d80c05632411f475eea6f4548963, which does not match expected checksum of hey") {
+	if !hasLogEntry(logHandler, log.InfoLevel, log.Fields{"app": "lockal-test"}, "removing /var/lib/lockal/.cache/lockal/sha512/he/hey since it has a checksum of a705aaf587ddc9ed135d4c318c339f3a0d6eb3a2e11936942afbfcd65254da6a1600b7b8e27f59464219fdc704f3b96c9953d80c05632411f475eea6f4548963, which does not match expected checksum of hey") {
 		t.Error("expected a log message saying checksums did not match after download")
 	}
 
@@ -173,9 +201,10 @@ func TestDownloadReturnsErrorWhenGetFileErrs(t *testing.T) {
 	dep := Dependency{
 		Name:     "lockal",
 		Location: "some.sh/lockal",
+		Checksum: "samplechecksum",
 	}
 
-	err := dep.Download(afero.NewMemMapFs(), logCtx, getFile)
+	err := dep.Download(afero.NewMemMapFs(), logCtx, "/tmp/.cache", getFile)
 	if err == nil {
 		t.Fatalf("expected error to be returned when getFile errs")
 	}
