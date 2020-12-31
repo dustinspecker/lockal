@@ -19,6 +19,8 @@ version. Then we have to handle removing stale executables and downloading the c
 
 Also, sometimes downloading is slow, so it would be great if Lockal could access a cache of previous executables it has downloaded.
 
+Then a coworker says, "Hey, your scripts are cool, but they only support Linux. I use a Mac."
+
 Lockal helps automate this process.
 
 ## Install lockal
@@ -79,6 +81,51 @@ If we execute `lockal install` again, we'll see the following logs:
 ```
 
 Lockal only downloads executables that don't exist or if the checksum does not match what exists.
+
+Rarely, do we only need one executable for a project, so let's add another to our `lockal.star` file:
+
+```starlark
+executable(
+  name = "get_helm.sh",
+  location = "https://raw.githubusercontent.com/helm/helm/23dd3af5e19a02d4f4baa5b2f242645a1a3af629/scripts/get-helm-3",
+  checksum = "6faf31a30425399b7d75ad2d00cfcca12725b0386387b5569f382d6f7aecf123996c11f5d892c74236face3801d511dd9f1ec52e744ad3adfb397269f4c0c2bc",
+)
+
+executable(
+  name = "kind",
+  location = "https://github.com/kubernetes-sigs/kind/releases/download/v0.9.0/kind-linux-amd64",
+  checksum = "e7152acf5fd7a4a56af825bda64b1b8343a1f91588f9b3ddd5420ae5c5a95577d87431f2e417a7e03dd23914e1da9bed855ec19d0c4602729b311baccb30bd7f",
+)
+```
+
+`lockal install` will skip `get_helm.sh` since it already exists, but will retrieve `kind`.
+
+Our current `lockal.star` only supports Linux, but we can also support Mac with a few changes:
+
+```starlark
+executable(
+  name = "get_helm.sh",
+  location = "https://raw.githubusercontent.com/helm/helm/23dd3af5e19a02d4f4baa5b2f242645a1a3af629/scripts/get-helm-3",
+  checksum = "6faf31a30425399b7d75ad2d00cfcca12725b0386387b5569f382d6f7aecf123996c11f5d892c74236face3801d511dd9f1ec52e744ad3adfb397269f4c0c2bc",
+)
+
+def get_kind_checksum(os):
+  if os == "linux":
+    return "e7152acf5fd7a4a56af825bda64b1b8343a1f91588f9b3ddd5420ae5c5a95577d87431f2e417a7e03dd23914e1da9bed855ec19d0c4602729b311baccb30bd7f"
+
+  if os == "darwin":
+    return "1b716be0c6371f831718bb9f7e502533eb993d3648f26cf97ab47c2fa18f55c7442330bba62ba822ec11edb84071ab616696470cbdbc41895f2ae9319a7e3a99"
+
+  fail("unsupported operating_system: %s" % os)
+
+executable(
+  name = "kind",
+  location = "https://github.com/kubernetes-sigs/kind/releases/download/v0.9.0/kind-%(os)s-amd64" % dict(os = LOCKAL_OS),
+  checksum = get_kind_checksum(LOCKAL_OS),
+)
+```
+
+Now `lockal install` will retrieve the `kind` executable for Linux or Mac (darwin) as desired.
 
 ## Commands
 

@@ -1,6 +1,8 @@
 package parse
 
 import (
+	"fmt"
+	"runtime"
 	"testing"
 
 	"github.com/spf13/afero"
@@ -18,7 +20,7 @@ executable(
 
 executable(
 	name = "cloud",
-	location = "sky/cloud",
+	location = "sky/cloud-%(os)s" % dict(os = LOCKAL_OS),
 	checksum = "another_sum",
 )
 `
@@ -48,8 +50,9 @@ executable(
 	if deps[1].Name != "cloud" {
 		t.Errorf("expected second dep to have name cloud, but got %s", deps[1].Name)
 	}
-	if deps[1].Location != "sky/cloud" {
-		t.Errorf("expected second dep to have location sky/cloud, but got %s", deps[1].Location)
+	expectedDepLocation := fmt.Sprintf("sky/cloud-%s", runtime.GOOS)
+	if deps[1].Location != expectedDepLocation {
+		t.Errorf("expected second dep to have location %s, but got %s", expectedDepLocation, deps[1].Location)
 	}
 	if deps[1].Checksum != "another_sum" {
 		t.Errorf("expected second dep to have checksum another_sum, but got %s", deps[1].Checksum)

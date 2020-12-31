@@ -1,6 +1,8 @@
 package parse
 
 import (
+	"runtime"
+
 	"github.com/spf13/afero"
 	"go.starlark.net/starlark"
 
@@ -27,6 +29,7 @@ func GetDependencies(fs afero.Fs) ([]dependency.Dependency, error) {
 	}
 
 	nativeFunctions := starlark.StringDict{
+		"LOCKAL_OS":  starlark.String(runtime.GOOS),
 		"executable": starlark.NewBuiltin("executable", rules.Executable(addDep)),
 	}
 
