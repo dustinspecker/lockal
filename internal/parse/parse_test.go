@@ -20,7 +20,7 @@ executable(
 
 executable(
 	name = "cloud",
-	location = "sky/cloud-%(os)s" % dict(os = LOCKAL_OS),
+	location = "sky/cloud-%(os)s-%(arch)s" % dict(os = LOCKAL_OS, arch = LOCKAL_ARCH),
 	checksum = "another_sum",
 )
 `
@@ -50,7 +50,7 @@ executable(
 	if deps[1].Name != "cloud" {
 		t.Errorf("expected second dep to have name cloud, but got %s", deps[1].Name)
 	}
-	expectedDepLocation := fmt.Sprintf("sky/cloud-%s", runtime.GOOS)
+	expectedDepLocation := fmt.Sprintf("sky/cloud-%s-%s", runtime.GOOS, runtime.GOARCH)
 	if deps[1].Location != expectedDepLocation {
 		t.Errorf("expected second dep to have location %s, but got %s", expectedDepLocation, deps[1].Location)
 	}

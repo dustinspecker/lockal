@@ -21,6 +21,9 @@ Also, sometimes downloading is slow, so it would be great if Lockal could access
 
 Then a coworker says, "Hey, your scripts are cool, but they only support Linux. I use a Mac."
 
+One morning you wake up to see someone on the other side of the planet created a GitHub issue stating, "I want to use this on my Raspberry Pi.
+It's Linux, but arm64 architecture."
+
 Lockal helps automate this process.
 
 ## Install lockal
@@ -90,7 +93,7 @@ executable(
 
 `lockal install` will skip `get_helm.sh` since it already exists, but will retrieve `kind`.
 
-Our current `lockal.star` only supports Linux, but we can also support Mac with a few changes:
+Our current `lockal.star` only supports Linux/amd64, but we can also support Mac/amd64 and Linux/arm64 with a few changes:
 
 ```starlark
 executable(
@@ -99,19 +102,22 @@ executable(
   checksum = "6faf31a30425399b7d75ad2d00cfcca12725b0386387b5569f382d6f7aecf123996c11f5d892c74236face3801d511dd9f1ec52e744ad3adfb397269f4c0c2bc",
 )
 
-def get_kind_checksum(os):
+def get_kind_checksum(os, arch):
   if os == "linux":
-    return "e7152acf5fd7a4a56af825bda64b1b8343a1f91588f9b3ddd5420ae5c5a95577d87431f2e417a7e03dd23914e1da9bed855ec19d0c4602729b311baccb30bd7f"
+    if arch == "amd64":
+      return "e7152acf5fd7a4a56af825bda64b1b8343a1f91588f9b3ddd5420ae5c5a95577d87431f2e417a7e03dd23914e1da9bed855ec19d0c4602729b311baccb30bd7f"
+    if arch == "arm64":
+      return "0bcb81fe7e3aa4515df0c3c7607b3cd6f3cf2e87b029f18b4c4628e15225062d543cd1abfc8ac56477f159177f16fab4e416d598dc1beb57ad8ed46e9e6b180d"
 
   if os == "darwin":
     return "1b716be0c6371f831718bb9f7e502533eb993d3648f26cf97ab47c2fa18f55c7442330bba62ba822ec11edb84071ab616696470cbdbc41895f2ae9319a7e3a99"
 
-  fail("unsupported operating_system: %s" % os)
+  fail("unsupported operating_system/architecture: %s/%s" % (os, arch))
 
 executable(
   name = "kind",
-  location = "https://github.com/kubernetes-sigs/kind/releases/download/v0.9.0/kind-%(os)s-amd64" % dict(os = LOCKAL_OS),
-  checksum = get_kind_checksum(LOCKAL_OS),
+  location = "https://github.com/kubernetes-sigs/kind/releases/download/v0.9.0/kind-%(os)s-%(arch)s" % dict(os = LOCKAL_OS, arch = LOCKAL_ARCH),
+  checksum = get_kind_checksum(LOCKAL_OS, LOCKAL_ARCH),
 )
 ```
 
