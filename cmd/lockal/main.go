@@ -29,6 +29,24 @@ func main() {
 	app := &cli.App{
 		Name:  "lockal",
 		Usage: "manage binary dependencies",
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:   "log-level",
+				Usage:  "level of logs to write (debug, info, warn, error, fatal)",
+				Value:  "info",
+				Hidden: false,
+			},
+		},
+		Before: func(c *cli.Context) error {
+			logLevel, err := log.ParseLevel(c.String("log-level"))
+			if err != nil {
+				return err
+			}
+
+			log.SetLevel(logLevel)
+
+			return nil
+		},
 		Commands: []*cli.Command{
 			{
 				Name:  "install",
