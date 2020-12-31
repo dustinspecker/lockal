@@ -66,21 +66,11 @@ In the directory where `lockal.star` exists (typically the project root), run
 `lockal install`. Lockal will analyze the `lockal.star` file and begin downloading
 executables.
 
-We'll see lockal log something similar to:
+Lockal will log that it has downloaded `get_helm.sh` to its cache and created the bash script at `./bin/get_helm.sh` (relative to where `lockal.star` exists).
 
-```
-2020/12/29 08:34:31 downloading get_helm.sh from https://raw.githubusercontent.com/helm/helm/23dd3af5e19a02d4f4baa5b2f242645a1a3af629/scripts/get-helm-3 to bin/get_helm.sh
-```
+If we execute `lockal install` again, Lockal will log that it's skipping `get_helm.sh`.
 
-Lockal will have created the bash script at `./bin/get_helm.sh` (relative to where `lockal.star` exists.
-
-If we execute `lockal install` again, we'll see the following logs:
-
-```
-2020/12/29 08:37:32 skipping download for get_helm.sh as it already exists at bin/get_helm.sh
-```
-
-Lockal only downloads executables that don't exist or if the checksum does not match what exists.
+> Note: Lockal only downloads executables that don't exist or when the expected checksum does not match what exists.
 
 Rarely, do we only need one executable for a project, so let's add another to our `lockal.star` file:
 
