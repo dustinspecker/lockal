@@ -20,19 +20,19 @@ func TestExecutable(t *testing.T) {
 
 	addDepCalled := false
 
-	addDep := func(dep dependency.Dependency) error {
+	addDep := func(exe dependency.Executable) error {
 		addDepCalled = true
 
-		if dep.Name != "some_name" {
-			t.Errorf("expected dep.Name to be some_name, but was %s", dep.Name)
+		if exe.Name != "some_name" {
+			t.Errorf("expected dep.Name to be some_name, but was %s", exe.Name)
 		}
 
-		if dep.Location != "some_location" {
-			t.Errorf("expected dep.Location to be some_location, but was %s", dep.Location)
+		if exe.Location != "some_location" {
+			t.Errorf("expected exe.Location to be some_location, but was %s", exe.Location)
 		}
 
-		if dep.Checksum != "some_checksum" {
-			t.Errorf("expected dep.Checksum to be some_checksum, but was %s", dep.Checksum)
+		if exe.Checksum != "some_checksum" {
+			t.Errorf("expected exe.Checksum to be some_checksum, but was %s", exe.Checksum)
 		}
 
 		return nil
@@ -58,7 +58,7 @@ func TestExecutableReturnsErrorWhenInvalidArgs(t *testing.T) {
 	args := []starlark.Value{}
 	kwargs := []starlark.Tuple{}
 
-	addDep := func(dep dependency.Dependency) error {
+	addDep := func(exe dependency.Executable) error {
 		return nil
 	}
 

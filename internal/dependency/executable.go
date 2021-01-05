@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/afero"
 )
 
-type Dependency struct {
+type Executable struct {
 	Name     string
 	Location string
 	Checksum string
@@ -20,8 +20,8 @@ type Dependency struct {
 
 type GetFile func(dest, src string) error
 
-func (dep Dependency) Download(fs afero.Fs, logCtx *log.Entry, cacheDir string, getFile GetFile) error {
-	dest := fmt.Sprintf("bin/%s", dep.Name)
+func (exe Executable) Download(fs afero.Fs, logCtx *log.Entry, cacheDir string, getFile GetFile) error {
+	dest := fmt.Sprintf("bin/%s", exe.Name)
 
 	_, err := fs.Stat(dest)
 
@@ -38,33 +38,33 @@ func (dep Dependency) Download(fs afero.Fs, logCtx *log.Entry, cacheDir string, 
 	}
 
 	if err == nil {
-		removed, err := removeInvalidFile(fs, logCtx, dest, dep.Checksum)
+		removed, err := removeInvalidFile(fs, logCtx, dest, exe.Checksum)
 		if err != nil {
 			return err
 		}
 
 		if !removed {
-			logCtx.Info(fmt.Sprintf("skipping download for %s as it already exists at %s", dep.Name, dest))
+			logCtx.Info(fmt.Sprintf("skipping download for %s as it already exists at %s", exe.Name, dest))
 			return nil
 		}
 
 		logCtx.Info(fmt.Sprintf("removed old %s since it didn't match expected checksum", dest))
 	}
 
-	cache := fmt.Sprintf("%s/lockal/sha512/%s/%s", cacheDir, dep.Checksum[0:2], dep.Checksum)
+	cache := fmt.Sprintf("%s/lockal/sha512/%s/%s", cacheDir, exe.Checksum[0:2], exe.Checksum)
 	_, err = fs.Stat(cache)
 	if err != nil {
 		if !os.IsNotExist(err) {
 			return err
 		}
 
-		logCtx.Info(fmt.Sprintf("downloading %s from %s to %s", dep.Name, dep.Location, cache))
+		logCtx.Info(fmt.Sprintf("downloading %s from %s to %s", exe.Name, exe.Location, cache))
 
-		if err := getFile(cache, dep.Location); err != nil {
+		if err := getFile(cache, exe.Location); err != nil {
 			return err
 		}
 
-		removed, err := removeInvalidFile(fs, logCtx, cache, dep.Checksum)
+		removed, err := removeInvalidFile(fs, logCtx, cache, exe.Checksum)
 		if err != nil {
 			return err
 		}

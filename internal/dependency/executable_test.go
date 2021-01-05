@@ -28,13 +28,13 @@ func TestDownload(t *testing.T) {
 		return afero.WriteFile(fs, dest, []byte("file a"), 0644)
 	}
 
-	dep := Dependency{
+	exe := Executable{
 		Name:     "ghostdog",
 		Location: "some.sh/ghosthouse",
 		Checksum: "a705aaf587ddc9ed135d4c318c339f3a0d6eb3a2e11936942afbfcd65254da6a1600b7b8e27f59464219fdc704f3b96c9953d80c05632411f475eea6f4548963",
 	}
 
-	err := dep.Download(fs, logCtx, "/.cache", getFile)
+	err := exe.Download(fs, logCtx, "/.cache", getFile)
 	if err != nil {
 		t.Fatalf("expected no error, but got %v", err)
 	}
@@ -61,7 +61,7 @@ func TestDownload(t *testing.T) {
 		return fmt.Errorf("getFileNoDownload should not have been called - cache should have been used")
 	}
 
-	err = dep.Download(fs, logCtx, "/.cache", getFileNoDownload)
+	err = exe.Download(fs, logCtx, "/.cache", getFileNoDownload)
 	if err != nil {
 		t.Fatalf("expected no error, but got %v", err)
 	}
@@ -98,13 +98,13 @@ func TestDownloadSkipsGettingFileIfAlreadyExistsWithSameChecksum(t *testing.T) {
 		return fmt.Errorf("should not be called")
 	}
 
-	dep := Dependency{
+	exe := Executable{
 		Name:     "dustin",
 		Location: "dustin.com/dustin",
 		Checksum: "c301106040f367ce621cbafa373d73fe270a95aeb2a6076f15a6bf79c1634d39e67e62d3a660e410a865d1ec7e1c2a131270090083885656d1f941bdf8abefeb",
 	}
 
-	err := dep.Download(fs, logCtx, "/home/dustin/.cache", getFile)
+	err := exe.Download(fs, logCtx, "/home/dustin/.cache", getFile)
 	if err != nil {
 		t.Fatalf("expected no error, but got %v", err)
 	}
@@ -130,13 +130,13 @@ func TestDownloadUpdatesExecutableIfChecksumMismatch(t *testing.T) {
 		return afero.WriteFile(fs, dest, []byte("file dustin"), 0644)
 	}
 
-	dep := Dependency{
+	exe := Executable{
 		Name:     "dustin",
 		Location: "dustin.com/dustin",
 		Checksum: "c301106040f367ce621cbafa373d73fe270a95aeb2a6076f15a6bf79c1634d39e67e62d3a660e410a865d1ec7e1c2a131270090083885656d1f941bdf8abefeb",
 	}
 
-	err := dep.Download(fs, logCtx, "/tmp/.cache", getFile)
+	err := exe.Download(fs, logCtx, "/tmp/.cache", getFile)
 	if err != nil {
 		t.Fatalf("expected no error, but got %v", err)
 	}
@@ -158,13 +158,13 @@ func TestDownloadReturnsErrorIfChecksumDoesNotMatchAfterDownload(t *testing.T) {
 		return afero.WriteFile(fs, dest, []byte("file a"), 0644)
 	}
 
-	dep := Dependency{
+	exe := Executable{
 		Name:     "ghostdog",
 		Location: "some.sh/ghosthouse",
 		Checksum: "hey",
 	}
 
-	err := dep.Download(fs, logCtx, "/var/lib/lockal/.cache", getFile)
+	err := exe.Download(fs, logCtx, "/var/lib/lockal/.cache", getFile)
 	if err == nil {
 		t.Fatal("expected an error when checksums do not match")
 	}
@@ -198,13 +198,13 @@ func TestDownloadReturnsErrorWhenGetFileErrs(t *testing.T) {
 		return fmt.Errorf("some error")
 	}
 
-	dep := Dependency{
+	exe := Executable{
 		Name:     "lockal",
 		Location: "some.sh/lockal",
 		Checksum: "samplechecksum",
 	}
 
-	err := dep.Download(afero.NewMemMapFs(), logCtx, "/tmp/.cache", getFile)
+	err := exe.Download(afero.NewMemMapFs(), logCtx, "/tmp/.cache", getFile)
 	if err == nil {
 		t.Fatalf("expected error to be returned when getFile errs")
 	}
