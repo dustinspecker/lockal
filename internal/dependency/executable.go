@@ -18,9 +18,7 @@ type Executable struct {
 	Checksum string
 }
 
-type GetFile func(dest, src string) error
-
-func (exe Executable) Download(fs afero.Fs, logCtx *log.Entry, cacheDir string, getFile GetFile) error {
+func (exe Executable) Download(fs afero.Fs, logCtx *log.Entry, cacheDir string, getFile func(dest, src string) error) error {
 	dest := fmt.Sprintf("bin/%s", exe.Name)
 
 	_, err := fs.Stat(dest)
