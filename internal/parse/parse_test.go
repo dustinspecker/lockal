@@ -5,6 +5,8 @@ import (
 	"runtime"
 	"testing"
 
+	"github.com/dustinspecker/lockal/internal/dependency"
+
 	"github.com/spf13/afero"
 )
 
@@ -38,24 +40,27 @@ executable(
 		t.Fatalf("expected 2 deps to be returned, but got %d", len(deps))
 	}
 
-	if deps[0].Name != "cat" {
-		t.Errorf("expected first dep to have name cat, but got %s", deps[0].Name)
+	firstDep := deps[0].(dependency.Executable)
+	if firstDep.Name != "cat" {
+		t.Errorf("expected first dep to have name cat, but got %s", firstDep.Name)
 	}
-	if deps[0].Location != "farm/feline" {
-		t.Errorf("expected first dep to have location farm/feline, but got %s", deps[0].Location)
+	if firstDep.Location != "farm/feline" {
+		t.Errorf("expected first dep to have location farm/feline, but got %s", firstDep.Location)
 	}
-	if deps[0].Checksum != "some_sum" {
-		t.Errorf("expected first dep to have checksum some_sum, but got %s", deps[0].Checksum)
+	if firstDep.Checksum != "some_sum" {
+		t.Errorf("expected first dep to have checksum some_sum, but got %s", firstDep.Checksum)
 	}
-	if deps[1].Name != "cloud" {
-		t.Errorf("expected second dep to have name cloud, but got %s", deps[1].Name)
+
+	secondDep := deps[1].(dependency.Executable)
+	if secondDep.Name != "cloud" {
+		t.Errorf("expected second dep to have name cloud, but got %s", secondDep.Name)
 	}
 	expectedDepLocation := fmt.Sprintf("sky/cloud-%s-%s", runtime.GOOS, runtime.GOARCH)
-	if deps[1].Location != expectedDepLocation {
-		t.Errorf("expected second dep to have location %s, but got %s", expectedDepLocation, deps[1].Location)
+	if secondDep.Location != expectedDepLocation {
+		t.Errorf("expected second dep to have location %s, but got %s", expectedDepLocation, secondDep.Location)
 	}
-	if deps[1].Checksum != "another_sum" {
-		t.Errorf("expected second dep to have checksum another_sum, but got %s", deps[1].Checksum)
+	if secondDep.Checksum != "another_sum" {
+		t.Errorf("expected second dep to have checksum another_sum, but got %s", secondDep.Checksum)
 	}
 }
 

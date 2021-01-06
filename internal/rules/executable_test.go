@@ -20,8 +20,10 @@ func TestExecutable(t *testing.T) {
 
 	addDepCalled := false
 
-	addDep := func(exe dependency.Executable) error {
+	addDep := func(dep dependency.Dependency) error {
 		addDepCalled = true
+
+		exe := dep.(dependency.Executable)
 
 		if exe.Name != "some_name" {
 			t.Errorf("expected dep.Name to be some_name, but was %s", exe.Name)
@@ -58,7 +60,7 @@ func TestExecutableReturnsErrorWhenInvalidArgs(t *testing.T) {
 	args := []starlark.Value{}
 	kwargs := []starlark.Tuple{}
 
-	addDep := func(exe dependency.Executable) error {
+	addDep := func(dep dependency.Dependency) error {
 		return nil
 	}
 

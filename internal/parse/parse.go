@@ -10,8 +10,8 @@ import (
 	"github.com/dustinspecker/lockal/internal/rules"
 )
 
-func GetDependencies(fs afero.Fs) ([]dependency.Executable, error) {
-	deps := []dependency.Executable{}
+func GetDependencies(fs afero.Fs) ([]dependency.Dependency, error) {
+	deps := []dependency.Dependency{}
 
 	fileData, err := fs.Open("lockal.star")
 	if err != nil {
@@ -22,8 +22,8 @@ func GetDependencies(fs afero.Fs) ([]dependency.Executable, error) {
 		Name: "lockal-main",
 	}
 
-	addDep := func(exe dependency.Executable) error {
-		deps = append(deps, exe)
+	addDep := func(dep dependency.Dependency) error {
+		deps = append(deps, dep)
 
 		return nil
 	}
