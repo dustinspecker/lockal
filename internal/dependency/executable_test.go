@@ -39,7 +39,7 @@ func TestDownload(t *testing.T) {
 		t.Fatalf("expected no error, but got %v", err)
 	}
 
-	if !hasLogEntry(logHandler, log.InfoLevel, log.Fields{"app": "lockal-test"}, "downloading ghostdog from some.sh/ghosthouse to /.cache/lockal/sha512/a7/a705aaf587ddc9ed135d4c318c339f3a0d6eb3a2e11936942afbfcd65254da6a1600b7b8e27f59464219fdc704f3b96c9953d80c05632411f475eea6f4548963") {
+	if !hasLogEntry(logHandler, log.InfoLevel, log.Fields{"app": "lockal-test"}, "downloading some.sh/ghosthouse to /.cache/lockal/sha512/a7/a705aaf587ddc9ed135d4c318c339f3a0d6eb3a2e11936942afbfcd65254da6a1600b7b8e27f59464219fdc704f3b96c9953d80c05632411f475eea6f4548963") {
 		t.Error("expected a log message saying download in progress")
 	}
 

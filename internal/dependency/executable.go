@@ -50,33 +50,12 @@ func (exe Executable) Download(fs afero.Fs, logCtx *log.Entry, cacheDir string, 
 	}
 
 	cache := fmt.Sprintf("%s/lockal/sha512/%s/%s", cacheDir, exe.Checksum[0:2], exe.Checksum)
-	_, err = fs.Stat(cache)
-	if err != nil {
-		if !os.IsNotExist(err) {
-			return err
-		}
+	if err = downloadFile(fs, logCtx, exe.Location, cache, exe.Checksum, getFile); err != nil {
+		return err
+	}
 
-		logCtx.Info(fmt.Sprintf("downloading %s from %s to %s", exe.Name, exe.Location, cache))
-
-		if err := getFile(cache, exe.Location); err != nil {
-			return err
-		}
-
-		removed, err := removeInvalidFile(fs, logCtx, cache, exe.Checksum)
-		if err != nil {
-			return err
-		}
-
-		if removed {
-			errorMessage := fmt.Sprintf("downloaded %s did not match expected checksum", cache)
-			logCtx.Error(errorMessage)
-
-			return fmt.Errorf(errorMessage)
-		}
-
-		if err = fs.Chmod(cache, 0755); err != nil {
-			return err
-		}
+	if err = fs.Chmod(cache, 0755); err != nil {
+		return err
 	}
 
 	logCtx.Info(fmt.Sprintf("copying from %s to %s", cache, dest))
@@ -92,6 +71,35 @@ func (exe Executable) Download(fs afero.Fs, logCtx *log.Entry, cacheDir string, 
 	}
 
 	return afero.WriteFile(fs, dest, cacheContent, 0755)
+}
+
+func downloadFile(fs afero.Fs, logCtx *log.Entry, location, dest, expectedChecksum string, getFile func(dest, src string) error) error {
+	_, err := fs.Stat(dest)
+	if err != nil {
+		if !os.IsNotExist(err) {
+			return err
+		}
+
+		logCtx.Info(fmt.Sprintf("downloading %s to %s", location, dest))
+
+		if err := getFile(dest, location); err != nil {
+			return err
+		}
+
+		removed, err := removeInvalidFile(fs, logCtx, dest, expectedChecksum)
+		if err != nil {
+			return err
+		}
+
+		if removed {
+			errorMessage := fmt.Sprintf("downloaded %s did not match expected checksum", dest)
+			logCtx.Error(errorMessage)
+
+			return fmt.Errorf(errorMessage)
+		}
+	}
+
+	return nil
 }
 
 func removeInvalidFile(fs afero.Fs, logCtx *log.Entry, targetPath, expectedChecksum string) (bool, error) {
