@@ -114,7 +114,7 @@ func TestDownloadSkipsGettingFileIfAlreadyExistsWithSameChecksum(t *testing.T) {
 		t.Fatalf("expected no error, but got %v", err)
 	}
 
-	if !hasLogEntry(logHandler, log.InfoLevel, log.Fields{"app": "lockal-test"}, "skipping download for bin/dustin as it already exists at bin/dustin") {
+	if !hasLogEntry(logHandler, log.InfoLevel, log.Fields{"app": "lockal-test"}, "skipping download for bin/dustin as it already exists") {
 		t.Error("expected a log message saying skipping download")
 	}
 }

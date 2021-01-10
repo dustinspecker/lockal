@@ -21,8 +21,6 @@ type Executable struct {
 func (exe Executable) Download(fs afero.Fs, logCtx *log.Entry, cacheDir string, getFile func(dest, src string) error) error {
 	dest := exe.Name
 
-	_, err := fs.Stat(dest)
-
 	// check if dest file exists
 	// if dest file exists and checksum does match then do nothing
 	// if dest file exists and checksum does not match, remove the old dest file
@@ -31,22 +29,13 @@ func (exe Executable) Download(fs afero.Fs, logCtx *log.Entry, cacheDir string, 
 	// copy file from cache to dest file
 	// mark dest file as executable
 
-	if err != nil && !os.IsNotExist(err) {
+	existingFileIsValid, err := validateExistingFile(fs, logCtx, dest, exe.Checksum)
+	if err != nil {
 		return err
 	}
 
-	if err == nil {
-		removed, err := removeInvalidFile(fs, logCtx, dest, exe.Checksum)
-		if err != nil {
-			return err
-		}
-
-		if !removed {
-			logCtx.Info(fmt.Sprintf("skipping download for %s as it already exists at %s", exe.Name, dest))
-			return nil
-		}
-
-		logCtx.Info(fmt.Sprintf("removed old %s since it didn't match expected checksum", dest))
+	if existingFileIsValid {
+		return nil
 	}
 
 	cache := fmt.Sprintf("%s/lockal/sha512/%s/%s", cacheDir, exe.Checksum[0:2], exe.Checksum)
@@ -59,6 +48,30 @@ func (exe Executable) Download(fs afero.Fs, logCtx *log.Entry, cacheDir string, 
 	}
 
 	return markFileExecutable(fs, dest)
+}
+
+func validateExistingFile(fs afero.Fs, logCtx *log.Entry, filepath, expectedChecksum string) (bool, error) {
+	_, err := fs.Stat(filepath)
+
+	if err != nil && !os.IsNotExist(err) {
+		return false, err
+	}
+
+	if err == nil {
+		removed, err := removeInvalidFile(fs, logCtx, filepath, expectedChecksum)
+		if err != nil {
+			return false, err
+		}
+
+		if !removed {
+			logCtx.Info(fmt.Sprintf("skipping download for %s as it already exists", filepath))
+			return true, nil
+		}
+
+		logCtx.Info(fmt.Sprintf("removed old %s since it didn't match expected checksum", filepath))
+	}
+
+	return false, nil
 }
 
 func downloadFile(fs afero.Fs, logCtx *log.Entry, location, dest, expectedChecksum string, getFile func(dest, src string) error) error {
