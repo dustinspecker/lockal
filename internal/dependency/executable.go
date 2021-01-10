@@ -54,7 +54,7 @@ func (exe Executable) Download(fs afero.Fs, logCtx *log.Entry, cacheDir string, 
 		return err
 	}
 
-	if err = fs.Chmod(cache, 0755); err != nil {
+	if err = markFileExecutable(fs, cache); err != nil {
 		return err
 	}
 
@@ -104,6 +104,10 @@ func copyFile(fs afero.Fs, logCtx *log.Entry, src, dest string) error {
 	}
 
 	return afero.WriteFile(fs, dest, cacheContent, 0755)
+}
+
+func markFileExecutable(fs afero.Fs, filepath string) error {
+	return fs.Chmod(filepath, 0755)
 }
 
 func removeInvalidFile(fs afero.Fs, logCtx *log.Entry, targetPath, expectedChecksum string) (bool, error) {
