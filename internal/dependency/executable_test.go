@@ -16,10 +16,6 @@ func TestDownload(t *testing.T) {
 	fs := afero.NewMemMapFs()
 	logHandler, logCtx := getLogCtx()
 
-	if err := fs.Mkdir("bin", 0755); err != nil {
-		t.Fatalf("unexpected error creating bin directory: %v", err)
-	}
-
 	getFile := func(dest, src string) error {
 		if src != "some.sh/ghosthouse" {
 			return fmt.Errorf("invalid src provided")
