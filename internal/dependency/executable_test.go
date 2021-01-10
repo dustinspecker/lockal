@@ -3,11 +3,9 @@ package dependency
 import (
 	"fmt"
 	"os"
-	"reflect"
 	"testing"
 
 	"github.com/apex/log"
-	"github.com/apex/log/handlers/memory"
 	"github.com/spf13/afero"
 
 	"github.com/dustinspecker/lockal/internal/config"
@@ -256,26 +254,4 @@ func TestDownloadReturnsErrorWhenGetFileErrs(t *testing.T) {
 	if err.Error() != "some error" {
 		t.Errorf("expected error message of \"some error\" to be returned, but got \"%s\"", err.Error())
 	}
-}
-
-func getLogCtx() (*memory.Handler, *log.Entry) {
-	log.SetLevel(log.DebugLevel)
-	logHandler := memory.New()
-	log.SetHandler(logHandler)
-
-	logCtx := log.WithFields(log.Fields{
-		"app": "lockal-test",
-	})
-
-	return logHandler, logCtx
-}
-
-func hasLogEntry(handler *memory.Handler, logLevel log.Level, fields log.Fields, message string) bool {
-	for _, entry := range handler.Entries {
-		if entry.Level == logLevel && entry.Message == message && reflect.DeepEqual(entry.Fields, fields) {
-			return true
-		}
-	}
-
-	return false
 }
