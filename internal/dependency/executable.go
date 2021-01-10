@@ -54,11 +54,11 @@ func (exe Executable) Download(fs afero.Fs, logCtx *log.Entry, cacheDir string, 
 		return err
 	}
 
-	if err = markFileExecutable(fs, cache); err != nil {
+	if err = copyFile(fs, logCtx, cache, dest); err != nil {
 		return err
 	}
 
-	return copyFile(fs, logCtx, cache, dest)
+	return markFileExecutable(fs, dest)
 }
 
 func downloadFile(fs afero.Fs, logCtx *log.Entry, location, dest, expectedChecksum string, getFile func(dest, src string) error) error {
