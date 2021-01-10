@@ -58,19 +58,7 @@ func (exe Executable) Download(fs afero.Fs, logCtx *log.Entry, cacheDir string, 
 		return err
 	}
 
-	logCtx.Info(fmt.Sprintf("copying from %s to %s", cache, dest))
-
-	if err = fs.MkdirAll(filepath.Dir(dest), 0755); err != nil {
-		return err
-	}
-
-	// copy from cache to dest
-	cacheContent, err := afero.ReadFile(fs, cache)
-	if err != nil {
-		return err
-	}
-
-	return afero.WriteFile(fs, dest, cacheContent, 0755)
+	return copyFile(fs, logCtx, cache, dest)
 }
 
 func downloadFile(fs afero.Fs, logCtx *log.Entry, location, dest, expectedChecksum string, getFile func(dest, src string) error) error {
@@ -100,6 +88,22 @@ func downloadFile(fs afero.Fs, logCtx *log.Entry, location, dest, expectedChecks
 	}
 
 	return nil
+}
+
+func copyFile(fs afero.Fs, logCtx *log.Entry, src, dest string) error {
+	logCtx.Info(fmt.Sprintf("copying from %s to %s", src, dest))
+
+	if err := fs.MkdirAll(filepath.Dir(dest), 0755); err != nil {
+		return err
+	}
+
+	// copy from src to dest
+	cacheContent, err := afero.ReadFile(fs, src)
+	if err != nil {
+		return err
+	}
+
+	return afero.WriteFile(fs, dest, cacheContent, 0755)
 }
 
 func removeInvalidFile(fs afero.Fs, logCtx *log.Entry, targetPath, expectedChecksum string) (bool, error) {
