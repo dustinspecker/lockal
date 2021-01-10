@@ -66,6 +66,6 @@ func TestExecutableReturnsErrorWhenInvalidArgs(t *testing.T) {
 
 	_, err := Executable(addDep)(thread, builtin, args, kwargs)
 	if err == nil {
-		t.Fatal("Files should have returned an error")
+		t.Fatal("Executable should have returned an error")
 	}
 }
