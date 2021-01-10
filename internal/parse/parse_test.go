@@ -25,6 +25,14 @@ executable(
 	location = "sky/cloud-%(os)s-%(arch)s" % dict(os = LOCKAL_OS, arch = LOCKAL_ARCH),
 	checksum = "another_sum",
 )
+
+executable_from_archive(
+	name = "record",
+	location = "library/archives.tgz",
+	archive_checksum = "archive_sum",
+	extract_filepath = "bin/record",
+	executable_checksum = "exe_sum",
+)
 `
 
 	if err := afero.WriteFile(fs, "lockal.star", []byte(fileContents), 0644); err != nil {
@@ -36,8 +44,8 @@ executable(
 		t.Fatalf("unexpected error when invoking GetDependencies: %v", err)
 	}
 
-	if len(deps) != 2 {
-		t.Fatalf("expected 2 deps to be returned, but got %d", len(deps))
+	if len(deps) != 3 {
+		t.Fatalf("expected 3 deps to be returned, but got %d", len(deps))
 	}
 
 	firstDep := deps[0].(dependency.Executable)
@@ -61,6 +69,23 @@ executable(
 	}
 	if secondDep.Checksum != "another_sum" {
 		t.Errorf("expected second dep to have checksum another_sum, but got %s", secondDep.Checksum)
+	}
+
+	thirdDep := deps[2].(dependency.ExecutableFromArchive)
+	if thirdDep.Name != "record" {
+		t.Errorf("expected third dep to have name record, but got %s", thirdDep.Name)
+	}
+	if thirdDep.Location != "library/archives.tgz" {
+		t.Errorf("expected third dep to have location library/archives.tgz, but got %s", thirdDep.Location)
+	}
+	if thirdDep.ArchiveChecksum != "archive_sum" {
+		t.Errorf("expected third dep to have archive checksum of archive_sum, but got %s", thirdDep.ArchiveChecksum)
+	}
+	if thirdDep.ExtractFilepath != "bin/record" {
+		t.Errorf("expected third dep to have extract filepath of bin/record, but got %s", thirdDep.ExtractFilepath)
+	}
+	if thirdDep.ExecutableChecksum != "exe_sum" {
+		t.Errorf("expected third dep to have executable checksum of exe_sum, but got %s", thirdDep.ExecutableChecksum)
 	}
 }
 

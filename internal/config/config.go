@@ -6,8 +6,9 @@ import (
 )
 
 type Config struct {
-	CacheDir string
-	Fs       afero.Fs
-	LogCtx   *log.Entry
-	GetFile  func(dest, src string) error
+	CacheDir               string
+	Fs                     afero.Fs
+	LogCtx                 *log.Entry
+	GetFile                func(dest, src string) error
+	ExtractFileFromArchive func(archiveFileName, archivePath, extractFilepath, extractToDir string) error
 }

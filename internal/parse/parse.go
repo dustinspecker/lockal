@@ -29,9 +29,10 @@ func GetDependencies(fs afero.Fs) ([]dependency.Dependency, error) {
 	}
 
 	nativeFunctions := starlark.StringDict{
-		"LOCKAL_ARCH": starlark.String(runtime.GOARCH),
-		"LOCKAL_OS":   starlark.String(runtime.GOOS),
-		"executable":  starlark.NewBuiltin("executable", rules.Executable(addDep)),
+		"LOCKAL_ARCH":             starlark.String(runtime.GOARCH),
+		"LOCKAL_OS":               starlark.String(runtime.GOOS),
+		"executable":              starlark.NewBuiltin("executable", rules.Executable(addDep)),
+		"executable_from_archive": starlark.NewBuiltin("executable_from_archive", rules.ExecutableFromArchive(addDep)),
 	}
 
 	_, err = starlark.ExecFile(thread, "lockal.star", fileData, nativeFunctions)

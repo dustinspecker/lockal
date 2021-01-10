@@ -24,6 +24,9 @@ Then a coworker says, "Hey, your scripts are cool, but they only support Linux. 
 One morning you wake up to see someone on the other side of the planet created a GitHub issue stating, "I want to use this on my Raspberry Pi.
 It's Linux, but arm64 architecture."
 
+Some projects release plain binaries, but some projects release archive files containing executables. So, we need a way to handle extracting a file from
+an archive.
+
 Lockal helps automate this process.
 
 ## Install lockal
@@ -44,12 +47,12 @@ Lockal helps automate this process.
 Lockal uses the [Starlark language](https://github.com/bazelbuild/starlark), specifically the [go implementation](https://github.com/google/starlark-go).
 Starlark gives us the power of a scripting language similar to Python for configuration, while preventing non-determinstic results such as file access.
 
-### lockal.star
+### Download a single executable
 
-Let's start with an example where we want to download a bash script.
+Let's start with an example where we want to download a bash script. We'll first create a `lockal.star` file to define desired dependencies.
 
 An example `lockal.star` to install a bash script from https://raw.githubusercontent.com/helm/helm/23dd3af5e19a02d4f4baa5b2f242645a1a3af629/scripts/get-helm-3
-and name the file `get_helm.sh`.
+and name the file `get_helm.sh` looks like:
 
 ```starlark
 executable(
@@ -75,6 +78,8 @@ If we execute `lockal install` again, Lockal will log that it's skipping `get_he
 
 > Note: Lockal only downloads executables that don't exist or when the expected checksum does not match what exists.
 
+### Download multiple executables
+
 Rarely, do we only need one executable for a project, so let's add another to our `lockal.star` file:
 
 ```starlark
@@ -92,6 +97,8 @@ executable(
 ```
 
 `lockal install` will skip `get_helm.sh` since it already exists, but will retrieve `kind`.
+
+### Download specific executables based on operating system and architecture
 
 Our current `lockal.star` only supports Linux/amd64, but we can also support Mac/amd64 and Linux/arm64 with a few changes:
 
@@ -122,6 +129,36 @@ executable(
 ```
 
 Now `lockal install` will retrieve the `kind` executable for Linux or Mac (darwin) as desired.
+
+### Download and extract an executable from an archive
+
+It's common for projects to release artifacts in an archive such as a `tar.gz` file. Lockal can also handle this.
+
+An example `lockal.star`:
+
+```starlark
+executable_from_archive(
+  name = "bin/helm",
+  location = "https://get.helm.sh/helm-v3.4.2-linux-amd64.tar.gz",
+  archive_checksum = "f827744743df68c11f619f64f0f7c915c1afd15673ee287c5b8d68cf3c246deae97ac86aadd761e22432d7b5e927fc65288ce3dca80a495af6b2aefa71bce22a",
+  extract_filepath = "linux-amd64/helm",
+  executable_checksum = "d89093f1c463355b7280017c357a7d86825548a96d6b6772ae07fcc76a25474d02d3ba8f125514c49ff83383410863cd8b56702c5f9dcfa1f3f0d23ac1587fa1",
+)
+```
+
+Notice we now use `executable_from_archive` instead of `executable`. The `name` behaves the same
+and `location` is now the location of the archive to download.
+
+`archive_checksum` is used to cache and validate the downloaded archive matches what is expected.
+`extract_filepath` is a filepath within the archive to retrieve. `executable_checksum` is then
+used to cache and validate the extracted executable is what's expected.
+
+For this example, Lockal will
+1. download the archive
+2. validate the downloaded archive against the `archive_checksum`
+3. extract `linux-amd64/helm` from the archive
+4. validate the extacted file against the `executable_checksum`
+5. place the extracted file in `bin/helm`
 
 ## Commands
 

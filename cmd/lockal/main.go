@@ -1,12 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/apex/log"
 	cliHandler "github.com/apex/log/handlers/cli"
 	gogetter "github.com/hashicorp/go-getter"
+	"github.com/mholt/archiver"
 	"github.com/spf13/afero"
 	"github.com/urfave/cli/v2"
 
@@ -70,11 +72,26 @@ func main() {
 						return gogetter.GetFile(dest, src)
 					}
 
+					extractFileFromArchive := func(archiveFileName, archivePath, extractFilepath, extractToDir string) error {
+						extractorType, err := archiver.ByExtension(archiveFileName)
+						if err != nil {
+							return err
+						}
+
+						extractor, ok := extractorType.(archiver.Extractor)
+						if !ok {
+							return fmt.Errorf("invalid extractor")
+						}
+
+						return extractor.Extract(archivePath, extractFilepath, extractToDir)
+					}
+
 					cfg := config.Config{
-						CacheDir: c.String("cache-directory"),
-						Fs:       afero.NewOsFs(),
-						LogCtx:   logCtx,
-						GetFile:  getFile,
+						CacheDir:               c.String("cache-directory"),
+						Fs:                     afero.NewOsFs(),
+						LogCtx:                 logCtx,
+						GetFile:                getFile,
+						ExtractFileFromArchive: extractFileFromArchive,
 					}
 
 					for _, dep := range deps {
