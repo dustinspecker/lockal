@@ -19,7 +19,7 @@ type Executable struct {
 }
 
 func (exe Executable) Download(fs afero.Fs, logCtx *log.Entry, cacheDir string, getFile func(dest, src string) error) error {
-	dest := fmt.Sprintf("bin/%s", exe.Name)
+	dest := exe.Name
 
 	_, err := fs.Stat(dest)
 

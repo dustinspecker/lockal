@@ -16,7 +16,7 @@ def get_kind_checksum(operating_system, cpu_architecture):
   fail("unsupported operating_system/cpu_architecture: %s/%s" % (operating_system, cpu_architecture))
 
 executable(
-  name = "kind",
+  name = "bin/kind",
   location = kind_location,
   checksum = get_kind_checksum(LOCKAL_OS, LOCKAL_ARCH),
 )

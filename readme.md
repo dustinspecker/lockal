@@ -53,13 +53,13 @@ and name the file `get_helm.sh`.
 
 ```starlark
 executable(
-  name = "get_helm.sh",
+  name = "bin/get_helm.sh",
   location = "https://raw.githubusercontent.com/helm/helm/23dd3af5e19a02d4f4baa5b2f242645a1a3af629/scripts/get-helm-3",
   checksum = "6faf31a30425399b7d75ad2d00cfcca12725b0386387b5569f382d6f7aecf123996c11f5d892c74236face3801d511dd9f1ec52e744ad3adfb397269f4c0c2bc",
 )
 ```
 
-`name` is the name of the file that should be created, so a file named `get_helm.sh` will be created. `location` is where to download
+`name` is the name of the file that should be created, so a file named `get_helm.sh` in a directory named `bin` will be created. `location` is where to download
 the file from. Lockal requires `checksum` to determine if it should update a stale executable. Lockal also uses the `checksum`
 to validate that the expected artifact was downloaded.
 
@@ -69,7 +69,7 @@ In the directory where `lockal.star` exists (typically the project root), run
 `lockal install`. Lockal will analyze the `lockal.star` file and begin downloading
 executables.
 
-Lockal will log that it has downloaded `get_helm.sh` to its cache and created the bash script at `./bin/get_helm.sh` (relative to where `lockal.star` exists).
+Lockal will log that it has downloaded `get_helm.sh` to its cache and created the bash script at `bin/get_helm.sh` (relative to where `lockal.star` exists).
 
 If we execute `lockal install` again, Lockal will log that it's skipping `get_helm.sh`.
 
@@ -79,13 +79,13 @@ Rarely, do we only need one executable for a project, so let's add another to ou
 
 ```starlark
 executable(
-  name = "get_helm.sh",
+  name = "bin/get_helm.sh",
   location = "https://raw.githubusercontent.com/helm/helm/23dd3af5e19a02d4f4baa5b2f242645a1a3af629/scripts/get-helm-3",
   checksum = "6faf31a30425399b7d75ad2d00cfcca12725b0386387b5569f382d6f7aecf123996c11f5d892c74236face3801d511dd9f1ec52e744ad3adfb397269f4c0c2bc",
 )
 
 executable(
-  name = "kind",
+  name = "bin/kind",
   location = "https://github.com/kubernetes-sigs/kind/releases/download/v0.9.0/kind-linux-amd64",
   checksum = "e7152acf5fd7a4a56af825bda64b1b8343a1f91588f9b3ddd5420ae5c5a95577d87431f2e417a7e03dd23914e1da9bed855ec19d0c4602729b311baccb30bd7f",
 )
@@ -97,7 +97,7 @@ Our current `lockal.star` only supports Linux/amd64, but we can also support Mac
 
 ```starlark
 executable(
-  name = "get_helm.sh",
+  name = "bin/get_helm.sh",
   location = "https://raw.githubusercontent.com/helm/helm/23dd3af5e19a02d4f4baa5b2f242645a1a3af629/scripts/get-helm-3",
   checksum = "6faf31a30425399b7d75ad2d00cfcca12725b0386387b5569f382d6f7aecf123996c11f5d892c74236face3801d511dd9f1ec52e744ad3adfb397269f4c0c2bc",
 )
@@ -115,7 +115,7 @@ def get_kind_checksum(os, arch):
   fail("unsupported operating_system/architecture: %s/%s" % (os, arch))
 
 executable(
-  name = "kind",
+  name = "bin/kind",
   location = "https://github.com/kubernetes-sigs/kind/releases/download/v0.9.0/kind-%(os)s-%(arch)s" % dict(os = LOCKAL_OS, arch = LOCKAL_ARCH),
   checksum = get_kind_checksum(LOCKAL_OS, LOCKAL_ARCH),
 )

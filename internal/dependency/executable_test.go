@@ -25,7 +25,7 @@ func TestDownload(t *testing.T) {
 	}
 
 	exe := Executable{
-		Name:     "ghostdog",
+		Name:     "bin/ghostdog",
 		Location: "some.sh/ghosthouse",
 		Checksum: "a705aaf587ddc9ed135d4c318c339f3a0d6eb3a2e11936942afbfcd65254da6a1600b7b8e27f59464219fdc704f3b96c9953d80c05632411f475eea6f4548963",
 	}
@@ -104,7 +104,7 @@ func TestDownloadSkipsGettingFileIfAlreadyExistsWithSameChecksum(t *testing.T) {
 	}
 
 	exe := Executable{
-		Name:     "dustin",
+		Name:     "bin/dustin",
 		Location: "dustin.com/dustin",
 		Checksum: "c301106040f367ce621cbafa373d73fe270a95aeb2a6076f15a6bf79c1634d39e67e62d3a660e410a865d1ec7e1c2a131270090083885656d1f941bdf8abefeb",
 	}
@@ -114,7 +114,7 @@ func TestDownloadSkipsGettingFileIfAlreadyExistsWithSameChecksum(t *testing.T) {
 		t.Fatalf("expected no error, but got %v", err)
 	}
 
-	if !hasLogEntry(logHandler, log.InfoLevel, log.Fields{"app": "lockal-test"}, "skipping download for dustin as it already exists at bin/dustin") {
+	if !hasLogEntry(logHandler, log.InfoLevel, log.Fields{"app": "lockal-test"}, "skipping download for bin/dustin as it already exists at bin/dustin") {
 		t.Error("expected a log message saying skipping download")
 	}
 }
@@ -136,7 +136,7 @@ func TestDownloadUpdatesExecutableIfChecksumMismatch(t *testing.T) {
 	}
 
 	exe := Executable{
-		Name:     "dustin",
+		Name:     "bin/dustin",
 		Location: "dustin.com/dustin",
 		Checksum: "c301106040f367ce621cbafa373d73fe270a95aeb2a6076f15a6bf79c1634d39e67e62d3a660e410a865d1ec7e1c2a131270090083885656d1f941bdf8abefeb",
 	}
