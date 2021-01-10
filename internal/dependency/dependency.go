@@ -1,10 +1,9 @@
 package dependency
 
 import (
-	"github.com/apex/log"
-	"github.com/spf13/afero"
+	"github.com/dustinspecker/lockal/internal/config"
 )
 
 type Dependency interface {
-	Download(fs afero.Fs, logCtx *log.Entry, cacheDir string, getFile func(string, string) error) error
+	Download(config.Config) error
 }

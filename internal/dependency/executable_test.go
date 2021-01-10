@@ -9,6 +9,8 @@ import (
 	"github.com/apex/log"
 	"github.com/apex/log/handlers/memory"
 	"github.com/spf13/afero"
+
+	"github.com/dustinspecker/lockal/internal/config"
 )
 
 func TestDownload(t *testing.T) {
@@ -30,7 +32,14 @@ func TestDownload(t *testing.T) {
 		Checksum: "a705aaf587ddc9ed135d4c318c339f3a0d6eb3a2e11936942afbfcd65254da6a1600b7b8e27f59464219fdc704f3b96c9953d80c05632411f475eea6f4548963",
 	}
 
-	err := exe.Download(fs, logCtx, "/.cache", getFile)
+	cfg := config.Config{
+		CacheDir: "/.cache",
+		Fs:       fs,
+		LogCtx:   logCtx,
+		GetFile:  getFile,
+	}
+
+	err := exe.Download(cfg)
 	if err != nil {
 		t.Fatalf("expected no error, but got %v", err)
 	}
@@ -57,7 +66,9 @@ func TestDownload(t *testing.T) {
 		return fmt.Errorf("getFileNoDownload should not have been called - cache should have been used")
 	}
 
-	err = exe.Download(fs, logCtx, "/.cache", getFileNoDownload)
+	cfg.GetFile = getFileNoDownload
+
+	err = exe.Download(cfg)
 	if err != nil {
 		t.Fatalf("expected no error, but got %v", err)
 	}
@@ -109,7 +120,14 @@ func TestDownloadSkipsGettingFileIfAlreadyExistsWithSameChecksum(t *testing.T) {
 		Checksum: "c301106040f367ce621cbafa373d73fe270a95aeb2a6076f15a6bf79c1634d39e67e62d3a660e410a865d1ec7e1c2a131270090083885656d1f941bdf8abefeb",
 	}
 
-	err := exe.Download(fs, logCtx, "/home/dustin/.cache", getFile)
+	cfg := config.Config{
+		CacheDir: "/home/dustin/.cache",
+		Fs:       fs,
+		LogCtx:   logCtx,
+		GetFile:  getFile,
+	}
+
+	err := exe.Download(cfg)
 	if err != nil {
 		t.Fatalf("expected no error, but got %v", err)
 	}
@@ -141,7 +159,14 @@ func TestDownloadUpdatesExecutableIfChecksumMismatch(t *testing.T) {
 		Checksum: "c301106040f367ce621cbafa373d73fe270a95aeb2a6076f15a6bf79c1634d39e67e62d3a660e410a865d1ec7e1c2a131270090083885656d1f941bdf8abefeb",
 	}
 
-	err := exe.Download(fs, logCtx, "/tmp/.cache", getFile)
+	cfg := config.Config{
+		CacheDir: "/tmp/.cache",
+		Fs:       fs,
+		LogCtx:   logCtx,
+		GetFile:  getFile,
+	}
+
+	err := exe.Download(cfg)
 	if err != nil {
 		t.Fatalf("expected no error, but got %v", err)
 	}
@@ -169,7 +194,14 @@ func TestDownloadReturnsErrorIfChecksumDoesNotMatchAfterDownload(t *testing.T) {
 		Checksum: "hey",
 	}
 
-	err := exe.Download(fs, logCtx, "/var/lib/lockal/.cache", getFile)
+	cfg := config.Config{
+		CacheDir: "/var/lib/lockal/.cache",
+		Fs:       fs,
+		LogCtx:   logCtx,
+		GetFile:  getFile,
+	}
+
+	err := exe.Download(cfg)
 	if err == nil {
 		t.Fatal("expected an error when checksums do not match")
 	}
@@ -209,7 +241,14 @@ func TestDownloadReturnsErrorWhenGetFileErrs(t *testing.T) {
 		Checksum: "samplechecksum",
 	}
 
-	err := exe.Download(afero.NewMemMapFs(), logCtx, "/tmp/.cache", getFile)
+	cfg := config.Config{
+		CacheDir: "/tmp/.cache",
+		Fs:       afero.NewMemMapFs(),
+		LogCtx:   logCtx,
+		GetFile:  getFile,
+	}
+
+	err := exe.Download(cfg)
 	if err == nil {
 		t.Fatalf("expected error to be returned when getFile errs")
 	}

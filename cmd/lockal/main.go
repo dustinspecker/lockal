@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/afero"
 	"github.com/urfave/cli/v2"
 
+	"github.com/dustinspecker/lockal/internal/config"
 	"github.com/dustinspecker/lockal/internal/parse"
 )
 
@@ -68,8 +69,16 @@ func main() {
 					getFile := func(dest, src string) error {
 						return gogetter.GetFile(dest, src)
 					}
+
+					cfg := config.Config{
+						CacheDir: c.String("cache-directory"),
+						Fs:       afero.NewOsFs(),
+						LogCtx:   logCtx,
+						GetFile:  getFile,
+					}
+
 					for _, dep := range deps {
-						if err = dep.Download(afero.NewOsFs(), logCtx, c.String("cache-directory"), getFile); err != nil {
+						if err = dep.Download(cfg); err != nil {
 							return err
 						}
 					}

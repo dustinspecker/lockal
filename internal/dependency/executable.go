@@ -3,8 +3,7 @@ package dependency
 import (
 	"fmt"
 
-	"github.com/apex/log"
-	"github.com/spf13/afero"
+	"github.com/dustinspecker/lockal/internal/config"
 )
 
 type Executable struct {
@@ -13,7 +12,7 @@ type Executable struct {
 	Checksum string
 }
 
-func (exe Executable) Download(fs afero.Fs, logCtx *log.Entry, cacheDir string, getFile func(dest, src string) error) error {
+func (exe Executable) Download(cfg config.Config) error {
 	dest := exe.Name
 
 	// check if dest file exists
@@ -24,7 +23,7 @@ func (exe Executable) Download(fs afero.Fs, logCtx *log.Entry, cacheDir string, 
 	// copy file from cache to dest file
 	// mark dest file as executable
 
-	existingFileIsValid, err := validateExistingFile(fs, logCtx, dest, exe.Checksum)
+	existingFileIsValid, err := validateExistingFile(cfg.Fs, cfg.LogCtx, dest, exe.Checksum)
 	if err != nil {
 		return err
 	}
@@ -33,14 +32,14 @@ func (exe Executable) Download(fs afero.Fs, logCtx *log.Entry, cacheDir string, 
 		return nil
 	}
 
-	cache := fmt.Sprintf("%s/lockal/sha512/%s/%s", cacheDir, exe.Checksum[0:2], exe.Checksum)
-	if err = downloadFile(fs, logCtx, exe.Location, cache, exe.Checksum, getFile); err != nil {
+	cache := fmt.Sprintf("%s/lockal/sha512/%s/%s", cfg.CacheDir, exe.Checksum[0:2], exe.Checksum)
+	if err = downloadFile(cfg.Fs, cfg.LogCtx, exe.Location, cache, exe.Checksum, cfg.GetFile); err != nil {
 		return err
 	}
 
-	if err = copyFile(fs, logCtx, cache, dest); err != nil {
+	if err = copyFile(cfg.Fs, cfg.LogCtx, cache, dest); err != nil {
 		return err
 	}
 
-	return markFileExecutable(fs, dest)
+	return markFileExecutable(cfg.Fs, dest)
 }
