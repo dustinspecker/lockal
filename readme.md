@@ -33,6 +33,12 @@ Lockal helps automate this process.
 
 ### download binary
 
+1. Download the [latest binary](https://github.com/dustinspecker/lockal/releases/latest) for your operating system and architecture.
+2. Mark the binary as exectuable by using `chmod`
+   - for example, `chmod +x lockal-linux-amd64`
+3. To make `lockal` available system-wide, move it to `/usr/local/bin`
+   - for example, `sudo mv lockal-linux-amd64 /usr/local/bin/lockal`
+
 ### build from source
 
 1. Have [go](https://golang.org/dl/) installed
