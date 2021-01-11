@@ -27,7 +27,7 @@ fmt:
 
 .PHONY: test-integration
 test-integration:
-	./test/integration/examples.sh
+	./scripts/test/run-integration-tests.sh
 
 .PHONY: test-unit
 test-unit:
