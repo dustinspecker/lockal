@@ -1,0 +1,27 @@
+---
+name: release
+on:
+  release:
+    types:
+      - created
+jobs:
+  release:
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '1.15.6'
+      - run: |
+          set -ex
+
+          VERSION=$(git describe --tags) make cross-build -j
+        shell: bash
+      - uses: skx/github-action-publish-binaries@release-0.15
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: 'bin/lockal-*'
+...
