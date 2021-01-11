@@ -1,11 +1,10 @@
 #!/bin/bash
 set -ex
-shopt -s globstar
 
 export LOCKAL_BIN=$PWD/bin/lockal
 
 # verify each example works
-for test_file in ./examples/**/test.sh; do
+for test_file in $(find ./examples/ -name test.sh -type file); do
   echo $test_file
   set +e
 
