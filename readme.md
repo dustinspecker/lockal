@@ -175,3 +175,23 @@ For this example, Lockal will
 ### `lockal version`
 
 `lockal version` prints the version of Lockal being used
+
+## Tips
+
+### How to get the sha512 of an executable?
+
+If a project doesn't provide a sha512 for the file, it can be retrieved manually.
+
+First download the file however you normally would, then execute the following command:
+
+```bash
+shasum --algorithm 512 FILE_NAME
+```
+
+and `shasum` will print something like:
+
+```
+2ede11f24d3c63b6a887b7763f34ad9e5a9fa11307d29393519e1019388019f82ebe8d4228ff487faa19fdaafb2ab31dd32dc45741e98da8f18a76cea7c90947 FILE_NAME
+```
+
+Then use this sha512 in your `lockal.star`.
