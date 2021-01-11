@@ -165,3 +165,7 @@ For this example, Lockal will
 ### `lockal install`
 
 `lockal install` ensures each executable defined in `lockal.star` is installed.
+
+### `lockal version`
+
+`lockal version` prints the version of Lockal being used

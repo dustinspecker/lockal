@@ -16,6 +16,10 @@ import (
 	"github.com/dustinspecker/lockal/internal/parse"
 )
 
+var (
+	VERSION = "dev"
+)
+
 func main() {
 	log.SetLevel(log.InfoLevel)
 	log.SetHandler(cliHandler.New(os.Stderr))
@@ -99,6 +103,15 @@ func main() {
 							return err
 						}
 					}
+
+					return nil
+				},
+			},
+			{
+				Name:  "version",
+				Usage: "print version of lockal",
+				Action: func(c *cli.Context) error {
+					fmt.Println(VERSION)
 
 					return nil
 				},
