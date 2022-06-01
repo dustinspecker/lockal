@@ -7,7 +7,7 @@ require (
 	github.com/dsnet/compress v0.0.1 // indirect
 	github.com/frankban/quicktest v1.11.3 // indirect
 	github.com/golang/snappy v0.0.2 // indirect
-	github.com/hashicorp/go-getter v1.5.1
+	github.com/hashicorp/go-getter v1.6.1
 	github.com/mholt/archiver v3.1.1+incompatible
 	github.com/nwaples/rardecode v1.1.0 // indirect
 	github.com/pierrec/lz4 v2.6.0+incompatible // indirect
